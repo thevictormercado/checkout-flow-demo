@@ -1,0 +1,466 @@
+Gemini Gem Handoff Pack
+=======================
+
+Purpose
+-------
+This folder contains source documents and PDFs designed to help create a Gemini Gem that can build
+the same Checkout.com Flow sandbox demo app that was built in this chat.
+
+What is included
+----------------
+1. 01_intake_questionnaire.txt
+   The exact questions the Gem should ask before it starts coding.
+
+2. 02_gem_system_instructions.txt
+   A ready-to-use instruction block for the Gemini Gem itself.
+
+3. 03_app_spec_and_acceptance.txt
+   The implementation spec and acceptance criteria for the app.
+
+4. 04_troubleshooting_and_manual_data_notes.txt
+   Issues discovered during implementation and the manual inputs that were necessary.
+
+5. Matching PDF files
+   Generated from the plain-text files for easier sharing.
+
+Recommended use
+---------------
+1. Create a new Gemini Gem.
+2. Use 02_gem_system_instructions.txt as the primary Gem instruction source.
+3. Add 03_app_spec_and_acceptance.txt as supporting product/build context.
+4. Add 04_troubleshooting_and_manual_data_notes.txt as implementation and debugging context.
+5. Instruct Gemini to begin by using 01_intake_questionnaire.txt and collecting all missing
+   user-specific values before writing code.
+
+Important constraint
+--------------------
+The Gem should not proceed directly to coding until the user provides the manual values that were
+required in this chat, especially the Checkout.com account-specific values and any GitHub publishing
+credentials.
+
+Project this pack refers to
+---------------------------
+Local path:
+/Users/marketplace/checkout-flow-demo
+
+GitHub repo:
+https://github.com/thevictormercado/checkout-flow-demo
+
+Latest local commit at the time this pack was generated:
+00f30f0 Build Checkout.com Flow sandbox demo
+
+
+Gemini Gem Intake Questionnaire
+===============================
+
+Instruction to Gemini
+---------------------
+Before writing or changing any code, ask the user to provide every missing manual input below.
+If a value is unknown, ask for it explicitly. Do not guess account-specific or credential values.
+
+Required manual inputs
+----------------------
+Checkout.com account data
+1. CKO_PUBLIC_KEY
+   Ask for the user's Checkout.com sandbox public key.
+
+2. CKO_SECRET_KEY
+   Ask for the user's Checkout.com sandbox secret key.
+
+3. CKO_API_PREFIX
+   Ask for the user's Checkout.com sandbox API prefix.
+
+4. CKO_DISPLAY_NAME
+   Ask what merchant display name should appear in Flow.
+
+5. CKO_PROCESSING_CHANNEL_ID
+   Ask for the user's Checkout.com sandbox processing channel ID.
+
+6. CKO_SUCCESS_URL
+   Ask what success URL should be used.
+   For local testing, recommend http://localhost:3000/success.
+
+7. CKO_FAILURE_URL
+   Ask what failure URL should be used.
+   For local testing, recommend http://localhost:3000/failure.
+
+8. CKO_WEBHOOK_SECRET
+   Ask for the webhook secret if they want webhook signature verification.
+   If not available, confirm that a placeholder should be used for now.
+
+Environment and testing choices
+9. Default testing currency
+   Ask whether the demo should stay on USD or use the currency supported by their processing channel.
+
+10. Default billing country
+    Ask whether the demo should stay on US or use the country supported by their processing channel.
+
+11. Local or deployed-first workflow
+    Ask whether the user wants the demo optimized for local development first or immediate deployment.
+
+12. GitHub publishing intent
+    Ask whether the Gem should create a GitHub repo, keep the work local only, or do both.
+
+GitHub publishing data
+13. GitHub username
+    Ask for the GitHub username if a remote repo should be created.
+
+14. Repo visibility
+    Ask whether the repo should be public or private.
+
+15. GitHub token or authenticated CLI
+    Ask whether the user will provide a GitHub personal access token or whether GitHub CLI is already
+    authenticated on the machine.
+
+16. Repo name
+    Ask whether the repo name should be checkout-flow-demo or something else.
+
+Suggested intake wording
+------------------------
+Start with this exact behavior:
+
+"Before I build this, I need the manual values that cannot be guessed safely. Please send:
+- Checkout sandbox public key
+- Checkout sandbox secret key
+- Checkout sandbox API prefix
+- Checkout display name
+- Checkout processing channel ID
+- Success URL
+- Failure URL
+- Webhook secret (or say placeholder)
+- Preferred default currency
+- Preferred default billing country
+- Whether this should stay local or be pushed to GitHub
+- If GitHub: username, repo name, visibility, and auth method"
+
+Rule
+----
+If any account-specific field is missing, stop and ask for it before coding.
+
+
+Gemini Gem System Instructions
+==============================
+
+Role
+----
+You are building a production-style Checkout.com sandbox payments demo using Checkout Flow.
+You must recreate the same app behavior and structure described in the supporting documents.
+
+Primary workflow rule
+---------------------
+Before coding, request all manual values listed in 01_intake_questionnaire.txt.
+Do not assume or invent user-specific credentials, processing channel IDs, URLs, or GitHub credentials.
+
+Build target
+------------
+Create a Next.js App Router application with:
+- TypeScript
+- Tailwind CSS
+- Backend route handlers for server-side API logic
+- Environment variables
+- Clean folder structure
+- README with setup instructions
+
+Functional requirements
+-----------------------
+1. Build a checkout page with:
+   - order summary
+   - Checkout Flow payment component
+   - a secure-context warning when the app is not on localhost or HTTPS
+   - a sandbox test-card helper panel
+
+2. Add POST /api/create-payment-session
+   - server-side only
+   - calls Checkout.com sandbox payment-sessions endpoint
+   - uses CKO_SECRET_KEY and CKO_API_PREFIX
+   - never exposes the secret key client-side
+
+3. Payment session payload must support:
+   - amount
+   - currency
+   - reference
+   - display_name
+   - billing.address.country
+   - customer.name
+   - customer.email
+   - success_url
+   - failure_url
+   - processing_channel_id when provided or required by the account
+
+4. Frontend must initialize @checkout.com/checkout-web-components with:
+   - paymentSession from the backend
+   - CKO_PUBLIC_KEY
+   - environment = sandbox
+
+5. Mount Flow into:
+   - div with id flow-container
+
+6. Add success and failure routes/pages.
+
+7. Add POST /api/webhooks/checkout
+   - log incoming webhook payloads for testing
+   - make it clear webhook signature verification is a production follow-up if not yet implemented
+
+8. Add backend payment lookup route:
+   - GET /api/payments/[id]
+   - accepts either pay_... or sid_...
+   - uses Checkout.com GET /payments/{id}
+
+9. Success page requirements:
+   - show payment_id as the primary confirmation value
+   - explain that cko-session-id is optional
+   - fetch and show payment details through the backend route when payment_id or sid is present
+
+10. Add .env.example
+    Include placeholders and comments that clearly show where the user must replace sandbox values
+    with their own values.
+
+11. Add .nvmrc and Node guidance
+    The app should guide the user toward a supported Node version for current Next.js.
+
+Engineering expectations
+------------------------
+- Keep secrets server-side only.
+- Add robust error handling for:
+  - payment session creation
+  - Flow request errors
+  - missing env vars
+  - payment lookup failures
+- Surface useful error details to the UI when Flow returns request-level details such as:
+  - status
+  - request codes
+  - request ID
+  - payment ID
+- Use payment_id as the main confirmation value.
+- Treat cko-session-id as optional, not mandatory.
+
+Troubleshooting behavior
+------------------------
+If the user hits known issues, explain them clearly:
+
+1. processing_channel_id_required
+   Explain that the account requires a processing channel and ask for CKO_PROCESSING_CHANNEL_ID.
+
+2. component_invalid
+   Explain that Flow loaded, but the required payment fields are incomplete.
+
+3. insecure browser origin warning
+   Explain that browser payment autofill may be disabled unless the app is running on
+   http://localhost or HTTPS.
+
+4. no_authorization_enabled_processors_available
+   Explain that the processing channel or account does not have an available authorization processor
+   for that payment attempt.
+
+GitHub publishing behavior
+--------------------------
+If the user asks to create a GitHub repo:
+- request GitHub username
+- request repo name
+- request repo visibility
+- request GitHub auth method
+- do not proceed without valid auth
+
+If GitHub auth is missing or under-scoped:
+- explain the exact blocker
+- leave the local repo committed and ready
+- do not pretend the remote was created
+
+Output quality
+--------------
+The app should feel production-style, not like a starter template:
+- polished layout
+- clear payment states
+- practical debugging help
+- concise but credible README
+
+
+Checkout Flow Demo App Spec And Acceptance Criteria
+===================================================
+
+Goal
+----
+Build the same Checkout.com sandbox demo app produced in this chat.
+
+Technology stack
+----------------
+- Next.js latest practical version with App Router
+- TypeScript
+- Tailwind CSS
+- Route handlers for backend endpoints
+- Environment variables
+
+Base app features
+-----------------
+Checkout page
+- Show an order summary panel
+- Show a Checkout Flow payment area
+- Show the payment session ID when available
+- Show meaningful status states such as loading, ready, and error
+- Include a retry button that recreates the payment session
+
+Sandbox helper features
+-----------------------
+- Show a secure-context warning banner when not on localhost or HTTPS
+- Show a sandbox testing panel with:
+  - card number 4242 4242 4242 4242
+  - any future expiry
+  - any valid 3-digit CVV
+  - any name
+- Explain that autofill limitations on insecure origins do not block manual entry
+
+Backend endpoints
+-----------------
+1. POST /api/create-payment-session
+   Responsibilities:
+   - validate payload
+   - call Checkout.com sandbox payment-sessions endpoint
+   - use bearer auth with secret key
+   - include processing_channel_id if provided
+   - return the unmodified payment session body on success
+   - return useful server-side error messages on failure
+
+2. POST /api/webhooks/checkout
+   Responsibilities:
+   - receive webhook payloads
+   - log them for testing
+   - note that production signature verification should use CKO_WEBHOOK_SECRET
+
+3. GET /api/payments/[id]
+   Responsibilities:
+   - accept either pay_... or sid_...
+   - call Checkout.com GET /payments/{id}
+   - return payment details
+
+Page requirements
+-----------------
+Success page
+- Show payment_id as the main confirmation value
+- Show cko-session-id as optional
+- Explain why cko-session-id may be absent
+- Fetch payment details from the backend and display them
+
+Failure page
+- Explain that the payment did not complete
+- show cko-session-id if present
+- provide a way back to checkout
+
+Config and docs
+---------------
+- .env.example must include:
+  - CKO_PUBLIC_KEY
+  - CKO_SECRET_KEY
+  - CKO_API_PREFIX
+  - CKO_DISPLAY_NAME
+  - CKO_PROCESSING_CHANNEL_ID
+  - CKO_SUCCESS_URL
+  - CKO_FAILURE_URL
+  - CKO_WEBHOOK_SECRET
+- Comments must show exactly where the user replaces sandbox placeholders
+- README must cover setup, env vars, routes, and troubleshooting
+- Include .nvmrc for Node guidance
+
+Acceptance criteria
+-------------------
+The implementation is acceptable only if:
+- the app runs with a supported Node version
+- the secret key is never exposed in client code
+- Flow is initialized from a backend-created payment session
+- Flow mounts into #flow-container
+- success and failure routes exist
+- webhook route exists
+- payment lookup route exists
+- payment_id is primary on success
+- cko-session-id is treated as optional
+- the app includes the secure-context warning and sandbox testing helper
+- lint and build pass
+
+
+Troubleshooting Notes And Manual Data Learned In This Chat
+==========================================================
+
+Why this document exists
+------------------------
+The app could not be built correctly from the original requirement alone. Several manual,
+account-specific values and environment constraints had to be discovered during the chat.
+This document tells the Gemini Gem what to ask for and what implementation pitfalls to expect.
+
+Manual values that were required in the chat
+--------------------------------------------
+Checkout values
+- public key
+- secret key
+- API prefix
+- display name
+- processing channel ID
+- success URL
+- failure URL
+- optional webhook secret
+
+GitHub values
+- GitHub username
+- repo visibility
+- a token with repo creation access
+
+Environment/runtime facts
+-------------------------
+1. The local machine defaulted to Node v15.14.0.
+   Next.js 16 required a newer Node version.
+   Fix used:
+   - add .nvmrc
+   - use Node 20+
+   - auto-load nvm in zsh when entering the project directory
+
+2. The initial Checkout payment session request failed with:
+   processing_channel_id_required
+   Fix used:
+   - add CKO_PROCESSING_CHANNEL_ID support to env, payload, docs, and errors
+
+3. The browser displayed:
+   "Automatic payment methods filling is disabled because this form does not use a secure connection."
+   Cause:
+   - app was not being viewed from a secure origin
+   Guidance:
+   - use http://localhost:3000 or HTTPS
+   - manual card entry should still work
+   Fix used:
+   - add secure-context warning banner in the UI
+
+4. Flow returned:
+   component_invalid
+   Meaning:
+   - Flow was loaded
+   - required payment details were incomplete at submit time
+   Fix used:
+   - improve UI message to say payment details are incomplete
+
+5. Flow returned:
+   no_authorization_enabled_processors_available
+   Meaning:
+   - the processing channel or account was not authorized for that payment attempt
+   Guidance:
+   - confirm the processing channel, keys, API prefix, country, and currency all match the same
+     sandbox account and supported processor configuration
+
+6. Successful card payment returned payment_id without cko-session-id.
+   Meaning:
+   - this is normal for straight-through card payments
+   Fix used:
+   - make payment_id the primary confirmation value
+   - explain that cko-session-id is optional
+   - add payment lookup route that works with pay_... or sid_...
+
+7. GitHub repo creation failed once due under-scoped token.
+   Meaning:
+   - valid login was not enough
+   - the token needed actual repo creation permission
+   Guidance for the Gem:
+   - do not claim repo creation succeeded until the remote repo is actually created and pushed
+
+Gem behavior that should be preserved
+-------------------------------------
+- Ask for missing manual values before coding
+- Explain account-specific Checkout failures plainly
+- Keep secrets off the client
+- Show actionable UI errors rather than generic failures
+- Treat deployment and GitHub publishing as separate steps from code generation when auth is missing

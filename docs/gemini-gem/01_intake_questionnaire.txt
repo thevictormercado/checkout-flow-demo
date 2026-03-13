@@ -1,0 +1,86 @@
+Gemini Gem Intake Questionnaire
+===============================
+
+Instruction to Gemini
+---------------------
+Before writing or changing any code, ask the user to provide every missing manual input below.
+If a value is unknown, ask for it explicitly. Do not guess account-specific or credential values.
+
+Required manual inputs
+----------------------
+Checkout.com account data
+1. CKO_PUBLIC_KEY
+   Ask for the user's Checkout.com sandbox public key.
+
+2. CKO_SECRET_KEY
+   Ask for the user's Checkout.com sandbox secret key.
+
+3. CKO_API_PREFIX
+   Ask for the user's Checkout.com sandbox API prefix.
+
+4. CKO_DISPLAY_NAME
+   Ask what merchant display name should appear in Flow.
+
+5. CKO_PROCESSING_CHANNEL_ID
+   Ask for the user's Checkout.com sandbox processing channel ID.
+
+6. CKO_SUCCESS_URL
+   Ask what success URL should be used.
+   For local testing, recommend http://localhost:3000/success.
+
+7. CKO_FAILURE_URL
+   Ask what failure URL should be used.
+   For local testing, recommend http://localhost:3000/failure.
+
+8. CKO_WEBHOOK_SECRET
+   Ask for the webhook secret if they want webhook signature verification.
+   If not available, confirm that a placeholder should be used for now.
+
+Environment and testing choices
+9. Default testing currency
+   Ask whether the demo should stay on USD or use the currency supported by their processing channel.
+
+10. Default billing country
+    Ask whether the demo should stay on US or use the country supported by their processing channel.
+
+11. Local or deployed-first workflow
+    Ask whether the user wants the demo optimized for local development first or immediate deployment.
+
+12. GitHub publishing intent
+    Ask whether the Gem should create a GitHub repo, keep the work local only, or do both.
+
+GitHub publishing data
+13. GitHub username
+    Ask for the GitHub username if a remote repo should be created.
+
+14. Repo visibility
+    Ask whether the repo should be public or private.
+
+15. GitHub token or authenticated CLI
+    Ask whether the user will provide a GitHub personal access token or whether GitHub CLI is already
+    authenticated on the machine.
+
+16. Repo name
+    Ask whether the repo name should be checkout-flow-demo or something else.
+
+Suggested intake wording
+------------------------
+Start with this exact behavior:
+
+"Before I build this, I need the manual values that cannot be guessed safely. Please send:
+- Checkout sandbox public key
+- Checkout sandbox secret key
+- Checkout sandbox API prefix
+- Checkout display name
+- Checkout processing channel ID
+- Success URL
+- Failure URL
+- Webhook secret (or say placeholder)
+- Preferred default currency
+- Preferred default billing country
+- Whether this should stay local or be pushed to GitHub
+- If GitHub: username, repo name, visibility, and auth method"
+
+Rule
+----
+If any account-specific field is missing, stop and ask for it before coding.

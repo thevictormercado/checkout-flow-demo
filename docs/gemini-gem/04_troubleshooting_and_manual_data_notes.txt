@@ -1,0 +1,88 @@
+Troubleshooting Notes And Manual Data Learned In This Chat
+==========================================================
+
+Why this document exists
+------------------------
+The app could not be built correctly from the original requirement alone. Several manual,
+account-specific values and environment constraints had to be discovered during the chat.
+This document tells the Gemini Gem what to ask for and what implementation pitfalls to expect.
+
+Manual values that were required in the chat
+--------------------------------------------
+Checkout values
+- public key
+- secret key
+- API prefix
+- display name
+- processing channel ID
+- success URL
+- failure URL
+- optional webhook secret
+
+GitHub values
+- GitHub username
+- repo visibility
+- a token with repo creation access
+
+Environment/runtime facts
+-------------------------
+1. The local machine defaulted to Node v15.14.0.
+   Next.js 16 required a newer Node version.
+   Fix used:
+   - add .nvmrc
+   - use Node 20+
+   - auto-load nvm in zsh when entering the project directory
+
+2. The initial Checkout payment session request failed with:
+   processing_channel_id_required
+   Fix used:
+   - add CKO_PROCESSING_CHANNEL_ID support to env, payload, docs, and errors
+
+3. The browser displayed:
+   "Automatic payment methods filling is disabled because this form does not use a secure connection."
+   Cause:
+   - app was not being viewed from a secure origin
+   Guidance:
+   - use http://localhost:3000 or HTTPS
+   - manual card entry should still work
+   Fix used:
+   - add secure-context warning banner in the UI
+
+4. Flow returned:
+   component_invalid
+   Meaning:
+   - Flow was loaded
+   - required payment details were incomplete at submit time
+   Fix used:
+   - improve UI message to say payment details are incomplete
+
+5. Flow returned:
+   no_authorization_enabled_processors_available
+   Meaning:
+   - the processing channel or account was not authorized for that payment attempt
+   Guidance:
+   - confirm the processing channel, keys, API prefix, country, and currency all match the same
+     sandbox account and supported processor configuration
+
+6. Successful card payment returned payment_id without cko-session-id.
+   Meaning:
+   - this is normal for straight-through card payments
+   Fix used:
+   - make payment_id the primary confirmation value
+   - explain that cko-session-id is optional
+   - add payment lookup route that works with pay_... or sid_...
+
+7. GitHub repo creation failed once due under-scoped token.
+   Meaning:
+   - valid login was not enough
+   - the token needed actual repo creation permission
+   Guidance for the Gem:
+   - do not claim repo creation succeeded until the remote repo is actually created and pushed
+
+Gem behavior that should be preserved
+-------------------------------------
+- Ask for missing manual values before coding
+- Explain account-specific Checkout failures plainly
+- Keep secrets off the client
+- Show actionable UI errors rather than generic failures
+- Treat deployment and GitHub publishing as separate steps from code generation when auth is missing

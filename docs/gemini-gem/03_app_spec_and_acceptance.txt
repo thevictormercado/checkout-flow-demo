@@ -1,0 +1,99 @@
+Checkout Flow Demo App Spec And Acceptance Criteria
+===================================================
+
+Goal
+----
+Build the same Checkout.com sandbox demo app produced in this chat.
+
+Technology stack
+----------------
+- Next.js latest practical version with App Router
+- TypeScript
+- Tailwind CSS
+- Route handlers for backend endpoints
+- Environment variables
+
+Base app features
+-----------------
+Checkout page
+- Show an order summary panel
+- Show a Checkout Flow payment area
+- Show the payment session ID when available
+- Show meaningful status states such as loading, ready, and error
+- Include a retry button that recreates the payment session
+
+Sandbox helper features
+-----------------------
+- Show a secure-context warning banner when not on localhost or HTTPS
+- Show a sandbox testing panel with:
+  - card number 4242 4242 4242 4242
+  - any future expiry
+  - any valid 3-digit CVV
+  - any name
+- Explain that autofill limitations on insecure origins do not block manual entry
+
+Backend endpoints
+-----------------
+1. POST /api/create-payment-session
+   Responsibilities:
+   - validate payload
+   - call Checkout.com sandbox payment-sessions endpoint
+   - use bearer auth with secret key
+   - include processing_channel_id if provided
+   - return the unmodified payment session body on success
+   - return useful server-side error messages on failure
+
+2. POST /api/webhooks/checkout
+   Responsibilities:
+   - receive webhook payloads
+   - log them for testing
+   - note that production signature verification should use CKO_WEBHOOK_SECRET
+
+3. GET /api/payments/[id]
+   Responsibilities:
+   - accept either pay_... or sid_...
+   - call Checkout.com GET /payments/{id}
+   - return payment details
+
+Page requirements
+-----------------
+Success page
+- Show payment_id as the main confirmation value
+- Show cko-session-id as optional
+- Explain why cko-session-id may be absent
+- Fetch payment details from the backend and display them
+
+Failure page
+- Explain that the payment did not complete
+- show cko-session-id if present
+- provide a way back to checkout
+
+Config and docs
+---------------
+- .env.example must include:
+  - CKO_PUBLIC_KEY
+  - CKO_SECRET_KEY
+  - CKO_API_PREFIX
+  - CKO_DISPLAY_NAME
+  - CKO_PROCESSING_CHANNEL_ID
+  - CKO_SUCCESS_URL
+  - CKO_FAILURE_URL
+  - CKO_WEBHOOK_SECRET
+- Comments must show exactly where the user replaces sandbox placeholders
+- README must cover setup, env vars, routes, and troubleshooting
+- Include .nvmrc for Node guidance
+
+Acceptance criteria
+-------------------
+The implementation is acceptable only if:
+- the app runs with a supported Node version
+- the secret key is never exposed in client code
+- Flow is initialized from a backend-created payment session
+- Flow mounts into #flow-container
+- success and failure routes exist
+- webhook route exists
+- payment lookup route exists
+- payment_id is primary on success
+- cko-session-id is treated as optional
+- the app includes the secure-context warning and sandbox testing helper
+- lint and build pass
